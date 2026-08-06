@@ -1,0 +1,7 @@
+
+# simulation dumps
+*.vcd
+*.fst
+
+# build directories
+**/build/
