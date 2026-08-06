@@ -41,8 +41,8 @@ module spondon_wb_pwm_top;
     logic [15:0] pwm_out;
 
     spondon_wb_pwm #(
-        .CHANNELS(16),
-        .DEFAULT_PRESCALER(4),
+        .START_ADDRESS(32'd0),
+        .DEFAULT_PRESCALER(3),
         .DEFAULT_PERIOD(99)
     ) dut (
         .clk(clk),
@@ -55,12 +55,14 @@ module spondon_wb_pwm_top;
     // Register Addresses
     //---------------------------------------------
 
-    localparam CTRL       = 32'h00;
-    localparam PRESCALER  = 32'h04;
-    localparam PERIOD     = 32'h08;
-    localparam ENABLE     = 32'h0C;
-    localparam INVERT     = 32'h10;
-    localparam DUTY_BASE  = 32'h14;
+    localparam CTRL       = 32'h00 >> 2;
+    localparam PRESCALER  = 32'h04 >> 2;
+    localparam PERIOD     = 32'h08 >> 2;
+    localparam ENABLE     = 32'h0C >> 2;
+    localparam INVERT     = 32'h10 >> 2;
+
+    localparam DUTY_BASE  = 32'h14; /* Shifted later \
+        for word addressing */
 
     //---------------------------------------------
     // Wishbone Write Task
@@ -168,10 +170,10 @@ module spondon_wb_pwm_top;
 
         $display("Programming duty cycles...");
 
-        wb_write(DUTY_BASE + 0*4, 32'd25); // 25%
-        wb_write(DUTY_BASE + 1*4, 32'd50); // 50%
-        wb_write(DUTY_BASE + 2*4, 32'd75); // 75%
-        wb_write(DUTY_BASE + 3*4, 32'd90); // 90%
+        wb_write((DUTY_BASE + 0*4) >> 2, 32'd25); // 25%
+        wb_write((DUTY_BASE + 1*4) >> 2, 32'd50); // 50%
+        wb_write((DUTY_BASE + 2*4) >> 2, 32'd75); // 75%
+        wb_write((DUTY_BASE + 3*4) >> 2, 32'd90); // 90%
 
         //-----------------------------------------
         // Enable channels
@@ -205,7 +207,7 @@ module spondon_wb_pwm_top;
         wb_read(PRESCALER, rd_data);
         $display("PRESCALER = %0d", rd_data);
 
-        wb_read(DUTY_BASE + 2*4, rd_data);
+        wb_read((DUTY_BASE + 2*4) >> 2, rd_data);
         $display("DUTY2 = %0d", rd_data);
 
         //-----------------------------------------
@@ -214,7 +216,7 @@ module spondon_wb_pwm_top;
 
         $display("Changing CH0 duty from 25%% to 80%%");
 
-        wb_write(DUTY_BASE + 0*4, 32'd80);
+        wb_write((DUTY_BASE + 0*4) >> 2, 32'd80);
 
         repeat (3000) @(posedge clk);
 
@@ -237,6 +239,16 @@ module spondon_wb_pwm_top;
         wb_write(INVERT, 32'h0000_0004);
 
         repeat (3000) @(posedge clk);
+
+        //-----------------------------------------
+        // Produce Error
+        //-----------------------------------------
+
+        $display("Invalid address");
+
+        wb_write(32'h5F >> 2, 32'h0);
+
+        @(posedge clk);
 
         //-----------------------------------------
         // Stop PWM

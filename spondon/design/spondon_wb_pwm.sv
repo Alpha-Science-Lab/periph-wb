@@ -13,16 +13,17 @@
  */
 
 module spondon_wb_pwm #(
-    parameter int CHANNELS = 16,
-    parameter logic [31:0] DEFAULT_PRESCALER = 32'd49,
-    parameter logic [31:0] DEFAULT_PERIOD    = 32'd999
+    parameter bit [31:0] START_ADDRESS     = 32'h0008_5100,
+    parameter bit [31:0] SIZE              = 32'h0000_0015,
+    parameter bit [31:0] DEFAULT_PRESCALER = 32'd3,
+    parameter bit [31:0] DEFAULT_PERIOD    = 32'd99
 )(
     input  logic clk,
     input  logic rst,
 
     wishbone_interface.slave wb,
 
-    output logic [CHANNELS-1:0] pwm_out
+    output logic [15:0] pwm_out
 );
 
     //---------------------------------------------
@@ -30,11 +31,11 @@ module spondon_wb_pwm #(
     //---------------------------------------------
 
     localparam logic [7:0] REG_CTRL       = 8'h00;
-    localparam logic [7:0] REG_PRESCALER  = 8'h04;
-    localparam logic [7:0] REG_PERIOD     = 8'h08;
-    localparam logic [7:0] REG_ENABLE     = 8'h0C;
-    localparam logic [7:0] REG_INVERT     = 8'h10;
-    localparam logic [7:0] REG_DUTY_BASE  = 8'h14;
+    localparam logic [7:0] REG_PRESCALER  = 8'h01;
+    localparam logic [7:0] REG_PERIOD     = 8'h02;
+    localparam logic [7:0] REG_ENABLE     = 8'h03;
+    localparam logic [7:0] REG_INVERT     = 8'h04;
+    localparam logic [7:0] REG_DUTY_BASE  = 8'h05;
 
     //---------------------------------------------
     // Registers
@@ -45,11 +46,11 @@ module spondon_wb_pwm #(
     logic [31:0] prescaler_reg;
     logic [31:0] period_reg;
 
-    logic [CHANNELS-1:0] enable_reg;
-    logic [CHANNELS-1:0] invert_reg;
+    logic [15:0] enable_reg;
+    logic [15:0] invert_reg;
 
     (* ram_style = "distributed" *)
-    logic [31:0] duty_reg [CHANNELS-1:0];
+    logic [31:0] duty_reg [15:0];
 
     //---------------------------------------------
     // PWM Engine
@@ -64,28 +65,33 @@ module spondon_wb_pwm #(
     // Address Decode
     //---------------------------------------------
 
-    logic [7:0] addr;
-
-    assign addr = wb.adr[7:0];
+    logic [7:0] addr_t;
+    logic [31:0] addr = wb.adr - START_ADDRESS;
+    logic err = wb.adr < START_ADDRESS 
+      || wb.adr >= (START_ADDRESS + SIZE);
+    
+    assign addr_t = addr[7:0];
 
     //---------------------------------------------
-    // Wishbone ACK
+    // Wishbone ACK / ERR
     //---------------------------------------------
 
     always_ff @(posedge clk) begin
-      if (rst)
+      if (rst) begin
         wb.ack <= 1'b0;
-      else
+        wb.err <= 1'b0;
+      end
+      else begin
         wb.ack <= wb.cyc && wb.stb && !wb.ack;
+        wb.err <= err;
+      end
     end
-
-    assign wb.err = 1'b0;
 
     //---------------------------------------------
     // Register Writes
     //---------------------------------------------
 
-    integer i;
+    // integer i;
 
     always_ff @(posedge clk) begin
 
@@ -98,15 +104,15 @@ module spondon_wb_pwm #(
         enable_reg <= '0;
         invert_reg <= '0;
 
-        // for (i = 0; i < CHANNELS; i++) begin
+        // for (i = 0; i < 16; i++) begin
         //     duty_reg[i] <= 32'd0;
         // end
       
       end
       else begin
 
-        if (wb.cyc && wb.stb && wb.we && !wb.ack) begin
-          unique case (addr)
+        if (wb.cyc && wb.stb && wb.we && !err) begin
+          unique case (addr_t)
             REG_CTRL:
                 ctrl_enable <= wb.dat_mosi[0];
 
@@ -117,17 +123,17 @@ module spondon_wb_pwm #(
                 period_reg <= wb.dat_mosi;
 
             REG_ENABLE:
-                enable_reg <= wb.dat_mosi[CHANNELS-1:0];
+                enable_reg <= wb.dat_mosi[15:0];
 
             REG_INVERT:
-                invert_reg <= wb.dat_mosi[CHANNELS-1:0];
+                invert_reg <= wb.dat_mosi[15:0];
 
             default: begin
 
-                if ((addr >= REG_DUTY_BASE) &&
-                    (addr < (REG_DUTY_BASE + CHANNELS*4))) begin
+                if ((addr_t >= REG_DUTY_BASE) &&
+                    (addr_t < REG_DUTY_BASE + 8'd16)) begin
 
-                    duty_reg[(addr - REG_DUTY_BASE) >> 2]
+                    duty_reg[addr_t - REG_DUTY_BASE]
                         <= wb.dat_mosi;
                 end
               
@@ -147,7 +153,7 @@ module spondon_wb_pwm #(
 
       wb.dat_miso = 32'd0;
 
-      unique case (addr)
+      unique case (addr_t)
 
         REG_CTRL:
             wb.dat_miso = {31'd0, ctrl_enable};
@@ -159,14 +165,14 @@ module spondon_wb_pwm #(
             wb.dat_miso = period_reg;
 
         REG_ENABLE:
-            wb.dat_miso = {{(32-CHANNELS){1'b0}}, enable_reg};
+            wb.dat_miso = {16'b0, enable_reg};
 
         REG_INVERT:
-            wb.dat_miso = {{(32-CHANNELS){1'b0}}, invert_reg};
+            wb.dat_miso = {16'b0, invert_reg};
 
         default: begin
-          if ((addr >= REG_DUTY_BASE) && (addr < (REG_DUTY_BASE + CHANNELS*4)))
-            wb.dat_miso = duty_reg[(addr - REG_DUTY_BASE) >> 2];
+          if ((addr_t >= REG_DUTY_BASE) && (addr_t < REG_DUTY_BASE + 8'd16))
+            wb.dat_miso = duty_reg[addr_t - REG_DUTY_BASE];
         end
 
       endcase
@@ -236,7 +242,7 @@ module spondon_wb_pwm #(
 
     generate
 
-      for (genvar ch = 0; ch < CHANNELS; ch++) begin : gen_pwm
+      for (genvar ch = 0; ch < 16; ch++) begin : gen_pwm
 
         logic pwm_raw;
 
