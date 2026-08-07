@@ -1,20 +1,16 @@
 # -----------------------------------------
-# Bashi I2S Verilator Build
+# Dotara I2C Verilator Build Makefile
 # Alpha Science Lab
 # -----------------------------------------
 
-TOP      := bashi_wb_i2s_top
-BUILD    := build
-
+TOP       := dotara_wb_i2c_top
+BUILD     := build
 VERILATOR := verilator
 
 RTL = \
 	../common/wishbone_interface.sv \
-	design/bashi_pkg.sv \
-	design/bashi_regs.sv \
-	design/bashi_i2s_tx.sv \
-	design/bashi_wb_i2s.sv \
-	tb/bashi_wb_i2s_top.sv
+	design/dotara_wb_i2c.sv \
+	tb/dotara_wb_i2c_top.sv
 
 VERILATOR_FLAGS = \
 	--sv \
@@ -23,10 +19,9 @@ VERILATOR_FLAGS = \
 	--timing \
 	-Wall \
 	-Wno-fatal \
+	-Wno-TIMESCALEMOD \
 	--assert \
 	--top-module $(TOP)
-
-# -----------------------------------------
 
 all: run
 
@@ -42,12 +37,9 @@ compile: build
 run: compile
 	./$(BUILD)/V$(TOP)
 
-wave: run
-	gtkwave tb_bashi_wb_i2s.vcd &
-
 clean:
 	rm -rf $(BUILD)
 	rm -f *.vcd
 	rm -f *.fst
 
-.PHONY: all build compile run wave clean
+.PHONY: all build compile run clean
