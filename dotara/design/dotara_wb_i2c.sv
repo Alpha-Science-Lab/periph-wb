@@ -4,7 +4,7 @@
  *
  * Brought up by Md. Jubaer Fahad & Md. Jannatul Nayem
  * Organization: Alpha Science Lab
- * May / August 2026
+ * August 2026
  *
  * Features:
  *  - 32-Bit Word-Addressed Wishbone Slave Interface

@@ -3,14 +3,14 @@
 # Alpha Science Lab
 # -----------------------------------------
 
-TOP       := tb_dotara_wb_i2c
+TOP       := dotara_wb_i2c_top
 BUILD     := build
 VERILATOR := verilator
 
 RTL = \
 	../common/wishbone_interface.sv \
 	design/dotara_wb_i2c.sv \
-	tb/tb_dotara_wb_i2c.sv
+	tb/dotara_wb_i2c_top.sv
 
 VERILATOR_FLAGS = \
 	--sv \
