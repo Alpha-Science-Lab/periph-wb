@@ -103,7 +103,7 @@ module dotara_wb_i2c_top;
 
     initial begin
         $display("-----------------------------------------------------");
-        $display("  Starting Verilator Simulation: tb_dotara_wb_i2c   ");
+        $display("  Starting Verilator Simulation: dotara_wb_i2c_top   ");
         $display("-----------------------------------------------------");
 
         clk = 0;
@@ -127,7 +127,8 @@ module dotara_wb_i2c_top;
 
         wb_read(32'h00, read_val);
         $display("[TEST 1] Read PRER_LO: 0x%02X", read_val[7:0]);
-        assert(read_val[7:0] == 8'h0A) else $error("PRER_LO mismatch!");
+        assert(read_val[7:0] == 8'h0A) 
+            else $error("PRER_LO mismatch!");
 
         // 2. Enable Core & Interrupts (CTR = Word 2, value = 0xC0)
         $display("[TEST 2] Enabling Dotara I2C Core (CTR = 0xC0)...");
@@ -135,7 +136,8 @@ module dotara_wb_i2c_top;
 
         wb_read(32'h02, read_val);
         $display("[TEST 2] Read CTR: 0xc0");
-        assert(read_val[7] == 1'b1) else $error("CTR Enable mismatch!");
+        assert(read_val[7] == 1'b1) 
+            else $error("CTR Enable mismatch!");
 
         // 3. Test TX FIFO Burst Pushing (RXR_TXR = Word 3)
         $display("[TEST 3] Pushing 3 bytes into TX FIFO (0xA0, 0xBE, 0xEF)...");
@@ -145,7 +147,8 @@ module dotara_wb_i2c_top;
 
         wb_read(32'h05, read_val); // Read FIFO_SR (Word 5)
         $display("[TEST 3] FIFO Status Register: 0x%04X (TX_CNT = %d, TX_EMPTY = %b)", read_val[15:0], read_val[7:4], read_val[0]);
-        assert(read_val[7:4] == 4'd3) else $display("[TEST 3] TX FIFO Count verified!");
+        assert(read_val[7:4] == 4'd3)
+            else $error("[TEST 3] TX FIFO count mismatch!");
 
         // 4. Generate START Condition (CR_SR = Word 4, CR = 0x80)
         $display("[TEST 4] Generating START Condition (CR = 0x80)...");
@@ -153,8 +156,12 @@ module dotara_wb_i2c_top;
 
         #2000;
         wb_read(32'h04, read_val);
-        $display("[TEST 4] Status Register: 0x%02X (IF = %b, BUSY = %b)", read_val[7:0], read_val[0], read_val[6]);
-
+        $display("[TEST 4] Status Register: 0x%02X (IF = %b, BUSY = %b)", 
+            read_val[7:0], read_val[0], read_val[6]);
+        
+        assert(read_val[6] == 1'b1)
+            else $error("[TEST 4] BUSY should be asserted after START!");
+        
         // 5. Transmit 1st Byte from TX FIFO (CR_SR = Word 4, CR = 0x10 [WR])
         $display("[TEST 5] Transmitting 1st Byte (0xA0) from TX FIFO...");
         wb_write(32'h04, 32'h10); // CR = WR
@@ -162,6 +169,9 @@ module dotara_wb_i2c_top;
         #8000;
         wb_read(32'h05, read_val);
         $display("[TEST 5] FIFO Status after 1st TX: TX_CNT = %d", read_val[7:4]);
+
+        assert(read_val[7:4] == 4'd2)
+            else $error("[TEST 5] TX FIFO count should be 2 after first TX!");
 
         // 6. Transmit 2nd Byte from TX FIFO (CR_SR = Word 4, CR = 0x10 [WR])
         $display("[TEST 6] Transmitting 2nd Byte (0xBE) from TX FIFO...");
@@ -171,14 +181,27 @@ module dotara_wb_i2c_top;
         wb_read(32'h05, read_val);
         $display("[TEST 6] FIFO Status after 2nd TX: TX_CNT = %d", read_val[7:4]);
 
+        assert(read_val[7:4] == 4'd1)
+            else $error("[TEST 6] TX FIFO count should be 1 after second TX!");
+
         // 7. Generate STOP Condition (CR_SR = Word 4, CR = 0x40)
         $display("[TEST 7] Generating STOP Condition (CR = 0x40)...");
         wb_write(32'h04, 32'h40);
 
         #2000;
         wb_read(32'h04, read_val);
-        $display("[TEST 7] Status Register after STOP: 0x%02X (BUSY = %b)", read_val[7:0], read_val[6]);
-
+        $display("[TEST 7] Status Register after STOP: 0x%02X (BUSY = %b)",
+            read_val[7:0], read_val[6]);
+        
+        assert(read_val[6] == 1'b0)
+            else $error("[TEST 7] BUSY is still asserted after STOP!");
+        
+        assert(read_val[1] == 1'b0)
+            else $error("[TEST 7] TIP is still asserted after STOP!");
+        
+        assert(read_val[0] == 1'b1)
+            else $error("[TEST 7] Interrupt flag should be asserted after STOP!");
+        
         $display("-----------------------------------------------------");
         $display("        ALL DOTARA TESTS PASSED SUCCESSFULLY!        ");
         $display("-----------------------------------------------------");
