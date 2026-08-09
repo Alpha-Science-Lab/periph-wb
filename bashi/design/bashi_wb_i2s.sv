@@ -13,8 +13,14 @@ module bashi_wb_i2s #(
 
   wishbone_interface.slave wb,
 
-  output logic             i2s_bclk,
-  output logic             i2s_lrclk,
+  // output logic             i2s_sck_o, /*to be incorporated*/
+  // output logic             i2s_ws_o,
+  // output logic             i2s_sd_o,
+  // output logic             i2s_sd_oe,
+  // input  logic             i2s_sd_i,
+
+  output logic             i2s_bclk,  /*requires modification*/
+  output logic             i2s_lrclk,  
   output logic             i2s_sdout
 );
     
@@ -26,7 +32,9 @@ module bashi_wb_i2s #(
   logic [SAMPLE_WIDTH-1:0] left_sample;
   logic [SAMPLE_WIDTH-1:0] right_sample;
 
-  assign wr_en = wb.cyc & wb.stb & wb.we;
+  assign wr_en = wb.cyc 
+    & wb.stb & wb.we;
+  
   assign wb.ack = wb.cyc & wb.stb;
   assign wb.err = 1'b0;
   assign wb.dat_miso = rdata;
