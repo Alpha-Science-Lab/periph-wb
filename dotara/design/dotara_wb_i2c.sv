@@ -270,11 +270,11 @@ module dotara_wb_i2c #(
         unique case (addr_t)
             REG_PRER_LO: wb.dat_miso = {24'd0, prer[7:0]};
             REG_PRER_HI: wb.dat_miso = {24'd0, prer[15:8]};
-            REG_CTR:     wb.dat_miso = {24'd0, ctr_en, ctr_ien, 6'd0};
+            REG_CTR    : wb.dat_miso = {24'd0, ctr_en, ctr_ien, 6'd0};
             REG_RXR_TXR: wb.dat_miso = {24'd0, rx_data_out};
-            REG_CR_SR:   wb.dat_miso = {24'd0, sr_rxack, sr_busy, sr_al, 3'd0, sr_tip, sr_if};
+            REG_CR_SR  : wb.dat_miso = {24'd0, sr_rxack, sr_busy, sr_al, 3'd0, sr_tip, sr_if};
             REG_FIFO_SR: wb.dat_miso = {16'd0, rx_cnt[3:0], tx_cnt[3:0], rx_full, rx_empty, tx_full, tx_empty};
-            default:     wb.dat_miso = 32'd0;
+            default    : wb.dat_miso = 32'd0;
         endcase
     end
 

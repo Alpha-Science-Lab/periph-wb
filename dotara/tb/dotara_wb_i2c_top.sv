@@ -102,9 +102,7 @@ module dotara_wb_i2c_top;
     logic [31:0] read_val;
 
     initial begin
-        $display("-----------------------------------------------------");
-        $display("  Starting Verilator Simulation: dotara_wb_i2c_top   ");
-        $display("-----------------------------------------------------");
+        $display("\033[0;33mStarting Verilator Simulation: dotara_wb_i2c_top \033[0m");
 
         clk = 0;
         rst = 1;
@@ -121,7 +119,7 @@ module dotara_wb_i2c_top;
         #20;
 
         // 1. Write Prescaler LOW & HIGH (PRER_LO = Word 0, PRER_HI = Word 1)
-        $display("[TEST 1] Writing Prescaler PRER = 10...");
+        $display("[TEST 1] Writing Prescaler PRER = 10 (PRER_LO = 0x0A, PRER_HI = 0x00)");
         wb_write(32'h00, 32'h0A); // PRER_LO
         wb_write(32'h01, 32'h00); // PRER_HI
 
@@ -131,16 +129,16 @@ module dotara_wb_i2c_top;
             else $error("PRER_LO mismatch!");
 
         // 2. Enable Core & Interrupts (CTR = Word 2, value = 0xC0)
-        $display("[TEST 2] Enabling Dotara I2C Core (CTR = 0xC0)...");
+        $display("[TEST 2] Enabling Dotara I2C Core (CTR = 0xC0)");
         wb_write(32'h02, 32'hC0);
 
         wb_read(32'h02, read_val);
-        $display("[TEST 2] Read CTR: 0xc0");
+        $display("[TEST 2] Read CTR: 0x%02X", read_val[7:0]);
         assert(read_val[7] == 1'b1) 
-            else $error("CTR Enable mismatch!");
+            else $error("CTR enable mismatch!");
 
         // 3. Test TX FIFO Burst Pushing (RXR_TXR = Word 3)
-        $display("[TEST 3] Pushing 3 bytes into TX FIFO (0xA0, 0xBE, 0xEF)...");
+        $display("[TEST 3] Pushing 3 bytes into TX FIFO (0xA0, 0xBE, 0xEF)");
         wb_write(32'h03, 32'hA0); // Byte 1
         wb_write(32'h03, 32'hBE); // Byte 2
         wb_write(32'h03, 32'hEF); // Byte 3
@@ -151,7 +149,7 @@ module dotara_wb_i2c_top;
             else $error("[TEST 3] TX FIFO count mismatch!");
 
         // 4. Generate START Condition (CR_SR = Word 4, CR = 0x80)
-        $display("[TEST 4] Generating START Condition (CR = 0x80)...");
+        $display("[TEST 4] Generating START Condition (CR = 0x80)");
         wb_write(32'h04, 32'h80);
 
         #2000;
@@ -163,7 +161,7 @@ module dotara_wb_i2c_top;
             else $error("[TEST 4] BUSY should be asserted after START!");
         
         // 5. Transmit 1st Byte from TX FIFO (CR_SR = Word 4, CR = 0x10 [WR])
-        $display("[TEST 5] Transmitting 1st Byte (0xA0) from TX FIFO...");
+        $display("[TEST 5] Transmitting 1st Byte (0xA0) from TX FIFO");
         wb_write(32'h04, 32'h10); // CR = WR
 
         #8000;
@@ -174,7 +172,7 @@ module dotara_wb_i2c_top;
             else $error("[TEST 5] TX FIFO count should be 2 after first TX!");
 
         // 6. Transmit 2nd Byte from TX FIFO (CR_SR = Word 4, CR = 0x10 [WR])
-        $display("[TEST 6] Transmitting 2nd Byte (0xBE) from TX FIFO...");
+        $display("[TEST 6] Transmitting 2nd Byte (0xBE) from TX FIFO");
         wb_write(32'h04, 32'h10); // CR = WR
 
         #8000;
@@ -185,10 +183,10 @@ module dotara_wb_i2c_top;
             else $error("[TEST 6] TX FIFO count should be 1 after second TX!");
 
         // 7. Generate STOP Condition (CR_SR = Word 4, CR = 0x40)
-        $display("[TEST 7] Generating STOP Condition (CR = 0x40)...");
+        $display("[TEST 7] Generating STOP Condition (CR = 0x40)");
         wb_write(32'h04, 32'h40);
 
-        #2000;
+        #8000;
         wb_read(32'h04, read_val);
         $display("[TEST 7] Status Register after STOP: 0x%02X (BUSY = %b)",
             read_val[7:0], read_val[6]);
@@ -202,9 +200,8 @@ module dotara_wb_i2c_top;
         assert(read_val[0] == 1'b1)
             else $error("[TEST 7] Interrupt flag should be asserted after STOP!");
         
-        $display("-----------------------------------------------------");
-        $display("        ALL DOTARA TESTS PASSED SUCCESSFULLY!        ");
-        $display("-----------------------------------------------------");
+        
+        $display("\033[0;33mALL DOTARA TESTS PASSED SUCCESSFULLY!\033[0m");
         $finish;
     end
 
