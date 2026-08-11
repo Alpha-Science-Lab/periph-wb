@@ -7,7 +7,7 @@
  *   - 16 pins per port
  *   - Programmable GPIO mode
  *   - Per-pin alternate function selection
- *   - UART, I2C, SPI, I2S, PWM and ADC alternate functions
+ *   - UART, I2C, SPI, I2S, PWM and ADC functions
  *   - Single-cycle Wishbone accesses
  *
  * GPIO assignment:
@@ -16,9 +16,10 @@
  *   A[1:0]   UART
  *   A[3:2]   I2C
  *   A[7:4]   PWM
+ *   A[15:12] SPI0
  *
  * GPIOB:
- *   B[3:0]   SPI
+ *   B[3:0]   SPI1
  *   B[7:4]   PWM
  *   B[11:8]  GPIO
  *   B[15:12] PWM
@@ -31,20 +32,20 @@
  *
  * Function encoding:
  *
- *   4'h0 = GPIO
- *   4'h1 = UART
- *   4'h2 = I2C
- *   4'h3 = SPI
- *   4'h4 = I2S
- *   4'h5 = PWM
- *   4'h6 = ADC
+ *   4'h0 ----> GPIO
+ *   4'h1 ----> UART
+ *   4'h2 ----> I2C
+ *   4'h3 ----> SPI
+ *   4'h4 ----> I2S
+ *   4'h5 ----> PWM
+ *   4'h6 ----> ADC
  *
  * GPIO mode encoding:
  *
- *   2'b00 = Input
- *   2'b01 = Push-pull output
- *   2'b10 = Open-drain output
- *   2'b11 = Reserved
+ *   2'b00 ----> Input
+ *   2'b01 ----> Push-pull output
+ *   2'b10 ----> Open-drain output
+ *   2'b11 ----> Reserved
  *
  * Note:
  *   The physical GPIO ports are exposed as inout signals.
@@ -89,13 +90,22 @@ module brahmaputra_wb_gpio #(
     output logic i2c_scl_i,
 
     //---------------------------------------------
-    // SPI
+    // SPI0
     //---------------------------------------------
 
-    input  logic spi_mosi_o,
-    input  logic spi_sck_o,
-    input  logic spi_cs_o,
-    output logic spi_miso_i,
+    input  logic spi0_mosi_o,
+    input  logic spi0_sck_o,
+    input  logic spi0_cs_o,
+    output logic spi0_miso_i,
+
+    //---------------------------------------------
+    // SPI1
+    //---------------------------------------------
+
+    input  logic spi1_mosi_o,
+    input  logic spi1_sck_o,
+    input  logic spi1_cs_o,
+    output logic spi1_miso_i,
 
     //---------------------------------------------
     // I2S
@@ -104,7 +114,6 @@ module brahmaputra_wb_gpio #(
     input  logic i2s_sck_o,
     input  logic i2s_ws_o,
     input  logic i2s_sd_o,
-    input  logic i2s_sd_oe,
     output logic i2s_sd_i,
 
     //---------------------------------------------
@@ -461,10 +470,11 @@ module brahmaputra_wb_gpio #(
         gpioa_o  = gpioa_output;
         gpioa_oe = 16'd0;
 
-        uart_rx = 1'b0;
+        uart_rx  = 1'b0;
 
-        i2c_sda_i = 1'b0;
-        i2c_scl_i = 1'b0;
+        i2c_sda_i   = 1'b0;
+        i2c_scl_i   = 1'b0;
+        spi0_miso_i = 1'b0;
 
         for (int i = 0; i < 16; i++) begin
 
@@ -564,6 +574,42 @@ module brahmaputra_wb_gpio #(
 
                 end
 
+                //---------------------------------
+                // SPI0
+                //---------------------------------
+
+                FUNC_SPI: begin
+
+                    case (i)
+
+                        12: begin
+                            gpioa_o[i]  = spi0_mosi_o;
+                            gpioa_oe[i] = 1'b1;
+                        end
+
+                        13: begin
+                            gpioa_o[i]  = spi0_sck_o;
+                            gpioa_oe[i] = 1'b1;
+                        end
+
+                        14: begin
+                            gpioa_o[i]  = spi0_cs_o;
+                            gpioa_oe[i] = 1'b1;
+                        end
+
+                        15: begin
+                            gpioa_oe[i] = 1'b0;
+                            spi0_miso_i  = gpioa_i[i];
+                        end
+
+                        default: begin
+                            gpioa_oe[i] = 1'b0;
+                        end
+
+                    endcase
+
+                end
+
                 default: begin
                     gpioa_oe[i] = 1'b0;
                 end
@@ -583,7 +629,7 @@ module brahmaputra_wb_gpio #(
         gpiob_o  = gpiob_output;
         gpiob_oe = 16'd0;
 
-        spi_miso_i = 1'b0;
+        spi1_miso_i = 1'b0;
 
         for (int i = 0; i < 16; i++) begin
 
@@ -614,7 +660,7 @@ module brahmaputra_wb_gpio #(
                 end
 
                 //---------------------------------
-                // SPI
+                // SPI1
                 //---------------------------------
 
                 FUNC_SPI: begin
@@ -622,23 +668,23 @@ module brahmaputra_wb_gpio #(
                     case (i)
 
                         0: begin
-                            gpiob_o[i]  = spi_mosi_o;
+                            gpiob_o[i]  = spi1_mosi_o;
                             gpiob_oe[i] = 1'b1;
                         end
 
                         1: begin
-                            gpiob_o[i]  = spi_sck_o;
+                            gpiob_o[i]  = spi1_sck_o;
                             gpiob_oe[i] = 1'b1;
                         end
 
                         2: begin
-                            gpiob_o[i]  = spi_cs_o;
+                            gpiob_o[i]  = spi1_cs_o;
                             gpiob_oe[i] = 1'b1;
                         end
 
                         3: begin
                             gpiob_oe[i] = 1'b0;
-                            spi_miso_i   = gpiob_i[i];
+                            spi1_miso_i   = gpiob_i[i];
                         end
 
                         default:
@@ -740,7 +786,7 @@ module brahmaputra_wb_gpio #(
 
                         2: begin
                             gpioc_o[i]  = i2s_sd_o;
-                            gpioc_oe[i] = i2s_sd_oe;
+                            gpioc_oe[i] = 1'b1;
                             i2s_sd_i    = gpioc_i[i];
                         end
 

@@ -83,15 +83,19 @@ module brahmaputra_wb_gpio_top;
     logic        i2c_scl_oe;
     logic        i2c_scl_i;
 
-    logic        spi_mosi_o;
-    logic        spi_sck_o;
-    logic        spi_cs_o;
-    logic        spi_miso_i;
+    logic        spi0_mosi_o;
+    logic        spi0_sck_o;
+    logic        spi0_cs_o;
+    logic        spi0_miso_i;
+
+    logic        spi1_mosi_o;
+    logic        spi1_sck_o;
+    logic        spi1_cs_o;
+    logic        spi1_miso_i;
 
     logic        i2s_sck_o;
     logic        i2s_ws_o;
     logic        i2s_sd_o;
-    logic        i2s_sd_oe;
     logic        i2s_sd_i;
 
     logic [15:0] pwm_out;
@@ -124,15 +128,19 @@ module brahmaputra_wb_gpio_top;
         .i2c_scl_oe(i2c_scl_oe),
         .i2c_scl_i(i2c_scl_i),
 
-        .spi_mosi_o(spi_mosi_o),
-        .spi_sck_o(spi_sck_o),
-        .spi_cs_o(spi_cs_o),
-        .spi_miso_i(spi_miso_i),
+        .spi0_mosi_o(spi0_mosi_o),
+        .spi0_sck_o(spi0_sck_o),
+        .spi0_cs_o(spi0_cs_o),
+        .spi0_miso_i(spi0_miso_i),
+
+        .spi1_mosi_o(spi1_mosi_o),
+        .spi1_sck_o(spi1_sck_o),
+        .spi1_cs_o(spi1_cs_o),
+        .spi1_miso_i(spi1_miso_i),
 
         .i2s_sck_o(i2s_sck_o),
         .i2s_ws_o(i2s_ws_o),
         .i2s_sd_o(i2s_sd_o),
-        .i2s_sd_oe(i2s_sd_oe),
         .i2s_sd_i(i2s_sd_i),
 
         .pwm_out(pwm_out),
@@ -288,14 +296,17 @@ module brahmaputra_wb_gpio_top;
         i2c_scl_o  = 1'b0;
         i2c_scl_oe = 1'b0;
 
-        spi_mosi_o = 1'b0;
-        spi_sck_o  = 1'b0;
-        spi_cs_o   = 1'b0;
+        spi0_mosi_o = 1'b0;
+        spi0_sck_o  = 1'b0;
+        spi0_cs_o   = 1'b0;
+
+        spi1_mosi_o = 1'b0;
+        spi1_sck_o  = 1'b0;
+        spi1_cs_o   = 1'b0;
 
         i2s_sck_o = 1'b0;
         i2s_ws_o  = 1'b0;
         i2s_sd_o  = 1'b0;
-        i2s_sd_oe = 1'b0;
 
         pwm_out = 16'h0000;
 
@@ -470,25 +481,25 @@ module brahmaputra_wb_gpio_top;
                  (FUNC_SPI << 4)  |
                  FUNC_SPI);
 
-        spi_mosi_o = 1'b1;
-        spi_sck_o  = 1'b0;
-        spi_cs_o   = 1'b1;
+        spi1_mosi_o = 1'b1;
+        spi1_sck_o  = 1'b0;
+        spi1_cs_o   = 1'b1;
 
         gpiob_ext    = 16'h0008;
         gpiob_ext_oe = 16'h0008;
 
         #1;
 
-        assert (gpiob[0] === spi_mosi_o)
+        assert (gpiob[0] === spi1_mosi_o)
             else $error("SPI MOSI mux failed");
 
-        assert (gpiob[1] === spi_sck_o)
+        assert (gpiob[1] === spi1_sck_o)
             else $error("SPI SCK mux failed");
 
-        assert (gpiob[2] === spi_cs_o)
+        assert (gpiob[2] === spi1_cs_o)
             else $error("SPI CS mux failed");
 
-        assert (spi_miso_i === 1'b1)
+        assert (spi1_miso_i === 1'b1)
             else $error("SPI MISO mux failed");
 
         gpiob_ext_oe = 16'h0000;
