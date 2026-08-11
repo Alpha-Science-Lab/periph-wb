@@ -6,11 +6,9 @@
  * Organization: Alpha Science Lab
  * August 2026
  *
- * Compatible with Tang Nano 9K Onboard Puya P25Q32H / Winbond W25Q32 SPI NOR Flash
- *
  * Features:
  *  - 32-Bit Word-Addressed Wishbone Slave Interface
- *  - Configurable START_ADDRESS & SIZE parameters for Swadheen-SoC memory map
+ *  - Configurable START_ADDRESS & SIZE parameters
  *  - Hardware 16-byte Transmit (TX) & Receive (RX) FIFOs for high-throughput burst transfers
  *  - 16-bit programmable prescaler for SCLK frequency generation
  *  - Supports SPI Mode 0 (CPOL=0, CPHA=0) and Mode 3 (CPOL=1, CPHA=1)
@@ -299,8 +297,6 @@ module karnaphuli_wb_spi #(
     end
 
 endmodule
-
-/* Named after the historic Bangladeshi river 'Karnaphuli' */
 
 /* Just as the Karnaphuli river channels swift, high-capacity maritime currents
  * into the sea, 'karnaphuli' streams high-throughput serial SPI data
