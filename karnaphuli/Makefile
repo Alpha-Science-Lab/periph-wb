@@ -25,3 +25,5 @@ run: compile
 
 clean:
 	rm -rf $(BUILD_DIR)
+	rm -f *.vcd
+	rm -f *.fst
