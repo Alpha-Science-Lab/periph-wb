@@ -9,17 +9,18 @@
  * Features:
  *  - 32-Bit Word-Addressed Wishbone Slave Interface
  *  - Configurable START_ADDRESS & SIZE parameters
+ *  - Supports up to 8 Slave Devices (8-bit Active-Low Chip Select spi_cs_n[7:0])
  *  - Hardware 16-byte Transmit (TX) & Receive (RX) FIFOs for high-throughput burst transfers
  *  - 16-bit programmable prescaler for SCLK frequency generation
  *  - Supports SPI Mode 0 (CPOL=0, CPHA=0) and Mode 3 (CPOL=1, CPHA=1)
- *  - Hardware Active-Low Chip Select (CS_N) control
- *  - Interrupt generation on transfer completion & status events
+ *  - Interrupt generation on transfer completion & RX FIFO availability
  *  - Single-cycle Wishbone accesses
  */
 
 module karnaphuli_wb_spi #(
     parameter bit [31:0] START_ADDRESS     = 32'h0008_5400,
     parameter bit [31:0] SIZE              = 32'h0000_0006,
+    parameter int        NUM_SLAVES        = 8,
     parameter bit [31:0] DEFAULT_PRESCALER = 32'd3
 )(
     input  logic clk,
@@ -29,11 +30,11 @@ module karnaphuli_wb_spi #(
 
     output logic interrupt,
 
-    // SPI Master Signals
-    output logic spi_cs_n,
-    output logic spi_sclk,
-    output logic spi_mosi,
-    input  logic spi_miso
+    // SPI Master Signals with 8 Slave CS lines
+    output logic [NUM_SLAVES-1:0] spi_cs_n,
+    output logic                  spi_sclk,
+    output logic                  spi_mosi,
+    input  logic                  spi_miso
 );
 
     //---------------------------------------------
@@ -43,7 +44,7 @@ module karnaphuli_wb_spi #(
     localparam logic [7:0] REG_PRESCALER = 8'h01; // Prescaler Register
     localparam logic [7:0] REG_STATUS    = 8'h02; // Status Register
     localparam logic [7:0] REG_DATA      = 8'h03; // Transmit / Receive FIFO Data
-    localparam logic [7:0] REG_CS        = 8'h04; // Chip Select Register
+    localparam logic [7:0] REG_CS        = 8'h04; // 8-bit Chip Select Mask Register
 
     //---------------------------------------------
     // Configuration & Status Registers
@@ -54,7 +55,7 @@ module karnaphuli_wb_spi #(
     logic ctrl_auto_cs;
 
     logic [15:0] prescaler_reg;
-    logic cs_n_reg;
+    logic [NUM_SLAVES-1:0] cs_n_reg;
 
     //---------------------------------------------
     // Hardware FIFOs (16 Bytes depth each)
@@ -99,7 +100,7 @@ module karnaphuli_wb_spi #(
     assign spi_sclk = sclk_reg;
     assign spi_mosi = tx_shift[7];
 
-    // Interrupt line active when transaction completes
+    // Interrupt active when SPI engine is idle and RX data is available
     assign interrupt = !busy && !rx_fifo_empty;
 
     //---------------------------------------------
@@ -138,7 +139,7 @@ module karnaphuli_wb_spi #(
             ctrl_cpha    <= 1'b0;
             ctrl_auto_cs <= 1'b0;
             prescaler_reg<= DEFAULT_PRESCALER[15:0];
-            cs_n_reg     <= 1'b1; // Inactive HIGH
+            cs_n_reg     <= {NUM_SLAVES{1'b1}}; // All CS lines inactive HIGH
         end else if (wb.cyc && wb.stb && wb.we && !err && !wb.ack) begin
             case (addr_t)
                 REG_CTRL: begin
@@ -148,7 +149,7 @@ module karnaphuli_wb_spi #(
                     ctrl_auto_cs <= wb.dat_mosi[3];
                 end
                 REG_PRESCALER: prescaler_reg <= wb.dat_mosi[15:0];
-                REG_CS:        cs_n_reg      <= wb.dat_mosi[0];
+                REG_CS:        cs_n_reg      <= wb.dat_mosi[NUM_SLAVES-1:0];
                 default: ;
             endcase
         end
@@ -211,7 +212,7 @@ module karnaphuli_wb_spi #(
             REG_PRESCALER: wb.dat_miso = {16'b0, prescaler_reg};
             REG_STATUS:    wb.dat_miso = {27'b0, rx_fifo_empty, rx_fifo_full, tx_fifo_empty, tx_fifo_full, busy};
             REG_DATA:      wb.dat_miso = {24'b0, rx_fifo[rx_rptr]};
-            REG_CS:        wb.dat_miso = {31'b0, cs_n_reg};
+            REG_CS:        wb.dat_miso = {{(32-NUM_SLAVES){1'b0}}, cs_n_reg};
             default:       wb.dat_miso = 32'd0;
         endcase
     end
@@ -300,4 +301,4 @@ endmodule
 
 /* Just as the Karnaphuli river channels swift, high-capacity maritime currents
  * into the sea, 'karnaphuli' streams high-throughput serial SPI data
- * with clean clock synchronization and minimal bus latency */
+ * across multiple slave channels with clean clock synchronization and minimal bus latency */
