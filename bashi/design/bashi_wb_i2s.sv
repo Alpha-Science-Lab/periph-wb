@@ -13,13 +13,7 @@ module bashi_wb_i2s #(
 
   wishbone_interface.slave wb,
 
-  // output logic             i2s_sck_o, /*to be incorporated*/
-  // output logic             i2s_ws_o,
-  // output logic             i2s_sd_o,
-  // output logic             i2s_sd_oe,
-  // input  logic             i2s_sd_i,
-
-  output logic             i2s_bclk,  /*requires modification*/
+  output logic             i2s_bclk,
   output logic             i2s_lrclk,  
   output logic             i2s_sdout
 );
