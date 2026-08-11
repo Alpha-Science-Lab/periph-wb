@@ -53,7 +53,7 @@
  */
 
 module brahmaputra_wb_gpio #(
-    parameter bit [31:0] START_ADDRESS = 32'h0008_5300,
+    parameter bit [31:0] START_ADDRESS = 32'h0008_5600,
     parameter bit [31:0] SIZE          = 32'h0000_0017
 )(
     input  logic clk,

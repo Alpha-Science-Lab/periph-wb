@@ -20,7 +20,7 @@
  */
 
 module karnaphuli_wb_spi #(
-    parameter bit [31:0] START_ADDRESS     = 32'h0008_5200,
+    parameter bit [31:0] START_ADDRESS     = 32'h0008_5400,
     parameter bit [31:0] SIZE              = 32'h0000_0006,
     parameter bit [31:0] DEFAULT_PRESCALER = 32'd3
 )(
