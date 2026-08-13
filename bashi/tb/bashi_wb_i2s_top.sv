@@ -27,6 +27,7 @@ module bashi_wb_i2s_top;
     logic i2s_sdout;
 
     bashi_wb_i2s #(
+        .START_ADDRESS(32'd0),
         .CLKDIV(CLKDIV),
         .SAMPLE_WIDTH(SAMPLE_WIDTH)
     ) dut (
@@ -87,6 +88,8 @@ module bashi_wb_i2s_top;
         wb.cyc = 1'b1;
         wb.stb = 1'b1;
 
+        wait (wb.ack);
+
         @(posedge clk);
 
         wb.cyc = 1'b0;
@@ -106,16 +109,23 @@ module bashi_wb_i2s_top;
 
         $display("[%0t] Programming samples", $time);
 
-        wb_write(32'h04, 32'h0000_A55A); // LEFT
-        wb_write(32'h08, 32'h0000_3CC3); // RIGHT
+        wb_write(32'h04 >> 2, 32'h0000_A55A); // LEFT
+        wb_write(32'h08 >> 2, 32'h0000_3CC3); // RIGHT
 
-        wb_write(32'h00, 32'h0000_0001); // ENABLE
+        wb_write(32'h00 >> 2, 32'h0000_0001); // ENABLE
 
         repeat (1000) @(posedge clk);
 
         $finish;
 
     end
+
+
+    initial begin
+        $dumpfile("tb_bashi_wb_i2s.vcd");
+        $dumpvars(0, bashi_wb_i2s_top);
+    end
+    
 
     //----------------------------------------
     // I2S Monitor

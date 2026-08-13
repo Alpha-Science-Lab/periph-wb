@@ -5,8 +5,11 @@
  */
 
 module bashi_wb_i2s #(
-  parameter int unsigned CLKDIV = 4,
-  parameter int unsigned SAMPLE_WIDTH = 16
+  parameter bit [15:0] CLKDIV        = 16'd4,
+  parameter bit [4:0]  SAMPLE_WIDTH  = 5'd16,
+  parameter bit [31:0] START_ADDRESS = 32'h0008_5300,
+  parameter bit [31:0] SIZE          = 32'h0000_0004
+
 )(
   input logic              clk,
   input logic              rst,
@@ -26,11 +29,16 @@ module bashi_wb_i2s #(
   logic [SAMPLE_WIDTH-1:0] left_sample;
   logic [SAMPLE_WIDTH-1:0] right_sample;
 
-  assign wr_en = wb.cyc 
-    & wb.stb & wb.we;
+  logic [7:0] addr_t;
+  logic [31:0] addr = wb.adr - START_ADDRESS;
+  logic err = wb.adr < START_ADDRESS 
+    || wb.adr >= (START_ADDRESS + SIZE);
   
-  assign wb.ack = wb.cyc & wb.stb;
-  assign wb.err = 1'b0;
+  assign addr_t = addr[7:0];
+
+  assign wr_en = wb.cyc & wb.stb & wb.we & ~err;
+  assign wb.ack = wb.cyc & wb.stb & ~err;
+  assign wb.err = wb.cyc & wb.stb & err;
   assign wb.dat_miso = rdata;
 
   bashi_regs #(
@@ -40,7 +48,7 @@ module bashi_wb_i2s #(
     .rst(rst),
 
     .wr_en(wr_en),
-    .addr(wb.adr[7:0]),
+    .addr(addr_t),
     .wdata(wb.dat_mosi),
 
     .busy(busy),

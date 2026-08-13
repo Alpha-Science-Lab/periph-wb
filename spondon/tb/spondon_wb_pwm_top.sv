@@ -276,7 +276,7 @@ module spondon_wb_pwm_top;
 
     initial begin
         $dumpfile("tb_spondon_wb_pwm.vcd");
-        $dumpvars(0, tb_spondon_wb_pwm);
+        $dumpvars(0, spondon_wb_pwm_top);
     end
 
 endmodule
