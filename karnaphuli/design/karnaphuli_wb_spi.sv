@@ -2,7 +2,7 @@
  * Wishbone Compliant SPI Master Peripheral with Hardware RX/TX FIFOs
  * Named after the majestic river of Bangladesh 'Karnaphuli'
  *
- * Core Name: karnaphuli_wb_spi
+ * File: karnaphuli_wb_spi
  * Organization: Alpha Science Lab
  * August 2026
  *
@@ -38,7 +38,7 @@ module karnaphuli_wb_spi #(
 );
 
     //---------------------------------------------
-    // Register Address Offsets (Word Addressed)
+    // Register Address Offsets
     //---------------------------------------------
     localparam logic [7:0] REG_CTRL      = 8'h00; // Control Register
     localparam logic [7:0] REG_PRESCALER = 8'h01; // Prescaler Register
@@ -58,7 +58,7 @@ module karnaphuli_wb_spi #(
     logic [NUM_SLAVES-1:0] cs_n_reg;
 
     //---------------------------------------------
-    // Hardware FIFOs (16 Bytes depth each)
+    // Hardware FIFOs
     //---------------------------------------------
     logic [7:0] tx_fifo [15:0];
     logic [3:0] tx_wptr, tx_rptr;
@@ -68,8 +68,10 @@ module karnaphuli_wb_spi #(
     logic [3:0] rx_wptr, rx_rptr;
     logic [4:0] rx_count;
 
-    logic tx_fifo_full, tx_fifo_empty;
-    logic rx_fifo_full, rx_fifo_empty;
+    logic tx_fifo_full;
+    logic tx_fifo_empty;
+    logic rx_fifo_full;
+    logic rx_fifo_empty;
 
     assign tx_fifo_full  = (tx_count == 5'd16);
     assign tx_fifo_empty = (tx_count == 5'd0);
@@ -134,13 +136,14 @@ module karnaphuli_wb_spi #(
 
     always_ff @(posedge clk) begin
         if (rst) begin
-            ctrl_enable  <= 1'b1;
-            ctrl_cpol    <= 1'b0;
-            ctrl_cpha    <= 1'b0;
-            ctrl_auto_cs <= 1'b0;
-            prescaler_reg<= DEFAULT_PRESCALER[15:0];
-            cs_n_reg     <= {NUM_SLAVES{1'b1}}; // All CS lines inactive HIGH
-        end else if (wb.cyc && wb.stb && wb.we && !err && !wb.ack) begin
+            ctrl_enable   <= 1'b0;
+            ctrl_cpol     <= 1'b0;
+            ctrl_cpha     <= 1'b0;
+            ctrl_auto_cs  <= 1'b0;
+            prescaler_reg <= DEFAULT_PRESCALER[15:0];
+            cs_n_reg      <= {NUM_SLAVES{1'b1}}; // All CS lines inactive HIGH
+        end 
+        else if (wb.cyc && wb.stb && wb.we && !err && !wb.ack) begin
             case (addr_t)
                 REG_CTRL: begin
                     ctrl_enable  <= wb.dat_mosi[0];
@@ -161,7 +164,8 @@ module karnaphuli_wb_spi #(
             tx_wptr  <= 4'd0;
             tx_rptr  <= 4'd0;
             tx_count <= 5'd0;
-        end else begin
+        end 
+        else begin
             if (tx_push && !(state == ST_LOAD)) begin
                 tx_fifo[tx_wptr] <= tx_data_in;
                 tx_wptr <= tx_wptr + 4'd1;
@@ -186,7 +190,8 @@ module karnaphuli_wb_spi #(
             rx_wptr  <= 4'd0;
             rx_rptr  <= 4'd0;
             rx_count <= 5'd0;
-        end else begin
+        end 
+        else begin
             if (rx_push && !rx_pop && !rx_fifo_full) begin
                 rx_fifo[rx_wptr] <= rx_data_in;
                 rx_wptr <= rx_wptr + 4'd1;
@@ -231,7 +236,8 @@ module karnaphuli_wb_spi #(
             rx_push    <= 1'b0;
             rx_data_in <= 8'd0;
             busy       <= 1'b0;
-        end else begin
+        end 
+        else begin
             rx_push <= 1'b0;
 
             case (state)
@@ -299,6 +305,6 @@ module karnaphuli_wb_spi #(
 
 endmodule
 
-/* Just as the Karnaphuli river channels swift, high-capacity maritime currents
- * into the sea, 'karnaphuli' streams high-throughput serial SPI data
- * across multiple slave channels with clean clock synchronization and minimal bus latency */
+/* Just as the Karnaphuli river channels swift, high-capacity currents
+ * into the sea, 'karnaphuli_wb_spi' streams high-throughput serial data
+ * across multiple slave channels */

@@ -201,9 +201,8 @@ module karnaphuli_wb_spi_top;
     logic [31:0] rd_data;
 
     initial begin
-        $display("-----------------------------------------------------");
-        $display("  Starting Verilator Simulation: karnaphuli_wb_spi   ");
-        $display("-----------------------------------------------------");
+
+        $display("\033[0;33mStarting Verilator Simulation: karnaphuli_wb_spi\033[0m");
 
         // Initialize
         rst = 1;
@@ -219,7 +218,7 @@ module karnaphuli_wb_spi_top;
         repeat (5) @(posedge clk);
 
         // 1. Program Prescaler & Verify
-        $display("[TEST 1] Programming prescaler = 5...");
+        $display("[TEST 1] Programming prescaler = 5");
         wb_write(PRESCALER, 32'd5);
 
         wb_read(PRESCALER, rd_data);
@@ -227,7 +226,7 @@ module karnaphuli_wb_spi_top;
         assert(rd_data[15:0] == 16'd5) else $error("[ASSERTION FAILED] Prescaler mismatch!");
 
         // 2. Program Control Reg (Enable Core)
-        $display("[TEST 2] Enabling SPI Core (CTRL = 0x01)...");
+        $display("[TEST 2] Enabling SPI Core (CTRL = 0x01)");
         wb_write(CTRL, 32'h1);
 
         wb_read(CTRL, rd_data);
@@ -235,7 +234,7 @@ module karnaphuli_wb_spi_top;
         assert(rd_data[0] == 1'b1) else $error("[ASSERTION FAILED] Core enable mismatch!");
 
         // 3. Select Slave 0 (Puya SPI Flash -> CS_N = 8'b1111_1110 = 0xFE)
-        $display("[TEST 3] Asserting Slave 0 CS_N (0xFE)...");
+        $display("[TEST 3] Asserting Slave 0 CS_N (0xFE)");
         wb_write(CS, 32'hFE);
 
         wb_read(CS, rd_data);
@@ -243,7 +242,7 @@ module karnaphuli_wb_spi_top;
         assert(rd_data[7:0] == 8'hFE) else $error("[ASSERTION FAILED] Slave 0 CS mismatch!");
 
         // 4. Send Read JEDEC ID Command (0x9F) + 3 Dummy Bytes to Slave 0
-        $display("[TEST 4] Transmitting JEDEC ID command (0x9F) + 3 dummy bytes to Slave 0...");
+        $display("[TEST 4] Transmitting JEDEC ID command (0x9F) + 3 dummy bytes to Slave 0");
         wb_write(DATA, 32'h9F);
         wb_write(DATA, 32'h00);
         wb_write(DATA, 32'h00);
@@ -258,7 +257,7 @@ module karnaphuli_wb_spi_top;
         repeat (100) @(posedge clk);
 
         // 5. Assert Slave 0 Readback Values
-        $display("[TEST 5] Reading & Asserting Slave 0 RX FIFO Data...");
+        $display("[TEST 5] Reading & Asserting Slave 0 RX FIFO Data");
 
         wb_read(DATA, rd_data); // Byte 0 (Command Echo)
         $display("[TEST 5] RX Byte 0 (Command Echo): 0x%02X", rd_data[7:0]);
@@ -279,7 +278,7 @@ module karnaphuli_wb_spi_top;
         wb_write(CS, 32'hFF);
 
         // 7. Select Slave 1 (SPI Sensor -> CS_N = 8'b1111_1101 = 0xFD)
-        $display("[TEST 6] Asserting Slave 1 CS_N (0xFD)...");
+        $display("[TEST 6] Asserting Slave 1 CS_N (0xFD)");
         wb_write(CS, 32'hFD);
 
         wb_read(CS, rd_data);
@@ -287,7 +286,7 @@ module karnaphuli_wb_spi_top;
         assert(rd_data[7:0] == 8'hFD) else $error("[ASSERTION FAILED] Slave 1 CS mismatch!");
 
         // 8. Transmit Command 0x90 + 2 Dummy Bytes to Slave 1
-        $display("[TEST 7] Transmitting Command 0x90 + 2 dummy bytes to Slave 1...");
+        $display("[TEST 7] Transmitting Command 0x90 + 2 dummy bytes to Slave 1");
         wb_write(DATA, 32'h90);
         wb_write(DATA, 32'h00);
         wb_write(DATA, 32'h00);
@@ -300,7 +299,7 @@ module karnaphuli_wb_spi_top;
         repeat (100) @(posedge clk);
 
         // 9. Assert Slave 1 Readback Values
-        $display("[TEST 8] Reading & Asserting Slave 1 RX FIFO Data...");
+        $display("[TEST 8] Reading & Asserting Slave 1 RX FIFO Data");
 
         wb_read(DATA, rd_data); // Byte 0 (Command Echo)
         $display("[TEST 8] RX Byte 0 (Command Echo): 0x%02X", rd_data[7:0]);
@@ -316,9 +315,8 @@ module karnaphuli_wb_spi_top;
         // 10. Deassert All Slaves (CS_N = 0xFF)
         wb_write(CS, 32'hFF);
 
-        $display("-----------------------------------------------------");
-        $display("     ALL KARNAPHULI SPI TESTS PASSED SUCCESSFULLY!   ");
-        $display("-----------------------------------------------------");
+        $display("\033[0;33mALL KARNAPHULI SPI TESTS PASSED SUCCESSFULLY!\033[0m");
+
         $finish;
     end
 
