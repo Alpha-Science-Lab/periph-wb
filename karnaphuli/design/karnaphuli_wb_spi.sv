@@ -110,9 +110,11 @@ module karnaphuli_wb_spi #(
     // Wishbone Address Decoding & ACK
     //---------------------------------------------
     logic [7:0] addr_t;
-    logic [31:0] addr_rel = wb.adr - START_ADDRESS;
-    logic err = (wb.adr < START_ADDRESS) || (wb.adr >= (START_ADDRESS + SIZE));
+    logic [31:0] addr_rel;
+    logic err;
 
+    assign addr_rel = wb.adr - START_ADDRESS;
+    assign err = (wb.adr < START_ADDRESS) || (wb.adr >= (START_ADDRESS + SIZE));
     assign addr_t = addr_rel[7:0];
 
     always_ff @(posedge clk) begin
