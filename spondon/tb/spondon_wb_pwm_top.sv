@@ -42,8 +42,8 @@ module spondon_wb_pwm_top;
 
     spondon_wb_pwm #(
         .START_ADDRESS(32'd0),
-        .DEFAULT_PRESCALER(3),
-        .DEFAULT_PERIOD(99)
+        .DEFAULT_PRESCALER(16'd7),
+        .DEFAULT_PERIOD(16'd999)
     ) dut (
         .clk(clk),
         .rst(rst),

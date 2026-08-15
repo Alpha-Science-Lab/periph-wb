@@ -40,7 +40,7 @@ run: compile
 	./$(BUILD)/V$(TOP)
 
 wave: run
-	gtkwave tb_brahmaputra_wb_gpio.vcd &
+	gtkwave tb_brahmaputra_wb_gpio.vcd
 
 clean:
 	rm -rf $(BUILD)

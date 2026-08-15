@@ -46,13 +46,13 @@ module dotara_wb_i2c_top;
     // Instantiate Unit Under Test (UUT)
     dotara_wb_i2c #(
         .START_ADDRESS(32'd0),
-        .SIZE(32'd6),
-        .FIFO_DEPTH(16)
+        .FIFO_DEPTH(16),
+        .DEFAULT_PRESCALER(16'd7)
     ) uut (
         .clk(clk),
         .rst(rst),
         .wb(wb),
-        .interrupt(interrupt),
+        .intr(interrupt),
         .scl_pad_i(scl_pad_i),
         .scl_pad_o(scl_pad_o),
         .scl_padoen_o(scl_padoen_o),

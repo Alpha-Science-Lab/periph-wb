@@ -50,14 +50,13 @@ module karnaphuli_wb_spi_top;
 
     karnaphuli_wb_spi #(
         .START_ADDRESS(32'd0),
-        .SIZE(32'h0000_0006),
         .NUM_SLAVES(8),
-        .DEFAULT_PRESCALER(3)
+        .DEFAULT_PRESCALER(16'd7)
     ) uut (
         .clk(clk),
         .rst(rst),
         .wb(wb.slave),
-        .interrupt(interrupt),
+        .intr(interrupt),
         .spi_cs_n(spi_cs_n),
         .spi_sclk(spi_sclk),
         .spi_mosi(spi_mosi),

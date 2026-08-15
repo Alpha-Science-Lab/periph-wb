@@ -21,14 +21,15 @@ module karnaphuli_wb_spi #(
     parameter bit [31:0] START_ADDRESS     = 32'h0008_5400,
     parameter bit [31:0] SIZE              = 32'h0000_0006,
     parameter int        NUM_SLAVES        = 8,
-    parameter bit [31:0] DEFAULT_PRESCALER = 32'd3
+    parameter int        FIFO_DEPTH        = 16,
+    parameter bit [15:0] DEFAULT_PRESCALER = 16'd7
 )(
     input  logic clk,
     input  logic rst,
 
     wishbone_interface.slave wb,
 
-    output logic interrupt,
+    output logic intr,
 
     // SPI Master Signals with 8 Slave CS lines
     output logic [NUM_SLAVES-1:0] spi_cs_n,
@@ -60,13 +61,13 @@ module karnaphuli_wb_spi #(
     //---------------------------------------------
     // Hardware FIFOs
     //---------------------------------------------
-    logic [7:0] tx_fifo [15:0];
-    logic [3:0] tx_wptr, tx_rptr;
-    logic [4:0] tx_count;
+    logic [7:0] tx_fifo [FIFO_DEPTH-1:0];
+    logic [$clog2(FIFO_DEPTH)-1:0] tx_wptr, tx_rptr;
+    logic [$clog2(FIFO_DEPTH):0] tx_count;
 
-    logic [7:0] rx_fifo [15:0];
-    logic [3:0] rx_wptr, rx_rptr;
-    logic [4:0] rx_count;
+    logic [7:0] rx_fifo [FIFO_DEPTH-1:0];
+    logic [$clog2(FIFO_DEPTH)-1:0] rx_wptr, rx_rptr;
+    logic [$clog2(FIFO_DEPTH):0] rx_count;
 
     logic tx_fifo_full;
     logic tx_fifo_empty;
@@ -136,12 +137,13 @@ module karnaphuli_wb_spi #(
 
     always_ff @(posedge clk) begin
         if (rst) begin
+            prescaler_reg <= DEFAULT_PRESCALER;
+            cs_n_reg      <= {NUM_SLAVES{1'b1}}; // All CS lines inactive HIGH
+
             ctrl_enable   <= 1'b0;
             ctrl_cpol     <= 1'b0;
             ctrl_cpha     <= 1'b0;
             ctrl_auto_cs  <= 1'b0;
-            prescaler_reg <= DEFAULT_PRESCALER[15:0];
-            cs_n_reg      <= {NUM_SLAVES{1'b1}}; // All CS lines inactive HIGH
         end 
         else if (wb.cyc && wb.stb && wb.we && !err && !wb.ack) begin
             case (addr_t)

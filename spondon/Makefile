@@ -40,7 +40,7 @@ run: compile
 	./$(BUILD)/V$(TOP)
 
 wave: run
-	gtkwave tb_spondon_wb_pwm.vcd &
+	gtkwave tb_spondon_wb_pwm.vcd
 
 clean:
 	rm -rf $(BUILD)

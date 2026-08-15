@@ -19,16 +19,17 @@
  */
 
 module dotara_wb_i2c #(
-    parameter bit [31:0] START_ADDRESS = 32'h0008_5200,
-    parameter bit [31:0] SIZE          = 32'h0000_0006,
-    parameter int        FIFO_DEPTH    = 16
+    parameter bit [31:0] START_ADDRESS     = 32'h0008_5200,
+    parameter bit [31:0] SIZE              = 32'h0000_0006,
+    parameter int        FIFO_DEPTH        = 16,
+    parameter bit [15:0] DEFAULT_PRESCALER = 16'd7
 )(
     input logic clk,
     input logic rst,
 
     wishbone_interface.slave wb,
 
-    output logic interrupt,
+    output logic intr,
 
     // I2C Tri-State Pad Signals
     input  logic scl_pad_i,
@@ -203,7 +204,7 @@ module dotara_wb_i2c #(
     //---------------------------------------------
     always_ff @(posedge clk) begin
         if (rst) begin
-            prer    <= 16'hFFFF;
+            prer    <= DEFAULT_PRESCALER;
             ctr_en  <= 1'b0;
             ctr_ien <= 1'b0;
             cr_sta  <= 1'b0;

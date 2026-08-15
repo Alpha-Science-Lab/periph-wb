@@ -15,8 +15,8 @@
 module spondon_wb_pwm #(
     parameter bit [31:0] START_ADDRESS     = 32'h0008_5100,
     parameter bit [31:0] SIZE              = 32'h0000_0015,
-    parameter bit [31:0] DEFAULT_PRESCALER = 32'd3,
-    parameter bit [31:0] DEFAULT_PERIOD    = 32'd99
+    parameter bit [15:0] DEFAULT_PRESCALER = 16'd7,
+    parameter bit [15:0] DEFAULT_PERIOD    = 16'd999
 )(
     input  logic clk,
     input  logic rst,
@@ -43,8 +43,8 @@ module spondon_wb_pwm #(
 
     logic ctrl_enable;
 
-    logic [31:0] prescaler_reg;
-    logic [31:0] period_reg;
+    logic [15:0] prescaler_reg;
+    logic [15:0] period_reg;
 
     logic [15:0] enable_reg;
     logic [15:0] invert_reg;
