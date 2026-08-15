@@ -66,10 +66,12 @@ module spondon_wb_pwm #(
     //---------------------------------------------
 
     logic [7:0] addr_t;
-    logic [31:0] addr = wb.adr - START_ADDRESS;
-    logic err = wb.adr < START_ADDRESS 
+    logic [31:0] addr;
+    logic err;
+
+    assign addr = wb.adr - START_ADDRESS;
+    assign err = wb.adr < START_ADDRESS 
       || wb.adr >= (START_ADDRESS + SIZE);
-    
     assign addr_t = addr[7:0];
 
     //---------------------------------------------
@@ -117,10 +119,10 @@ module spondon_wb_pwm #(
                 ctrl_enable <= wb.dat_mosi[0];
 
             REG_PRESCALER:
-                prescaler_reg <= wb.dat_mosi;
+                prescaler_reg <= wb.dat_mosi[15:0];
 
             REG_PERIOD:
-                period_reg <= wb.dat_mosi;
+                period_reg <= wb.dat_mosi[15:0];
 
             REG_ENABLE:
                 enable_reg <= wb.dat_mosi[15:0];

@@ -104,7 +104,7 @@ module karnaphuli_wb_spi #(
     assign spi_mosi = tx_shift[7];
 
     // Interrupt active when SPI engine is idle and RX data is available
-    assign interrupt = !busy && !rx_fifo_empty;
+    assign intr = !busy && !rx_fifo_empty;
 
     //---------------------------------------------
     // Wishbone Address Decoding & ACK

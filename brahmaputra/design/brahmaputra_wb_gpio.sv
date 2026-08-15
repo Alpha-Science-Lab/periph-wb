@@ -296,16 +296,16 @@ module brahmaputra_wb_gpio #(
                         gpioa_mode <= wb.dat_mosi;
 
                     REGA_FUNC0:
-                        gpioa_func[15:0] <= wb.dat_mosi;
+                        gpioa_func[15:0] <= wb.dat_mosi[15:0];
 
                     REGA_FUNC1:
-                        gpioa_func[31:16] <= wb.dat_mosi;
+                        gpioa_func[31:16] <= wb.dat_mosi[15:0];
 
                     REGA_FUNC2:
-                        gpioa_func[47:32] <= wb.dat_mosi;
+                        gpioa_func[47:32] <= wb.dat_mosi[15:0];
 
                     REGA_FUNC3:
-                        gpioa_func[63:48] <= wb.dat_mosi;
+                        gpioa_func[63:48] <= wb.dat_mosi[15:0];
 
                     //---------------------------------
                     // GPIOB
@@ -318,16 +318,16 @@ module brahmaputra_wb_gpio #(
                         gpiob_mode <= wb.dat_mosi;
 
                     REGB_FUNC0:
-                        gpiob_func[15:0] <= wb.dat_mosi;
+                        gpiob_func[15:0] <= wb.dat_mosi[15:0];
 
                     REGB_FUNC1:
-                        gpiob_func[31:16] <= wb.dat_mosi;
+                        gpiob_func[31:16] <= wb.dat_mosi[15:0];
 
                     REGB_FUNC2:
-                        gpiob_func[47:32] <= wb.dat_mosi;
+                        gpiob_func[47:32] <= wb.dat_mosi[15:0];
 
                     REGB_FUNC3:
-                        gpiob_func[63:48] <= wb.dat_mosi;
+                        gpiob_func[63:48] <= wb.dat_mosi[15:0];
 
                     //---------------------------------
                     // GPIOC
@@ -340,16 +340,16 @@ module brahmaputra_wb_gpio #(
                         gpioc_mode <= wb.dat_mosi;
 
                     REGC_FUNC0:
-                        gpioc_func[15:0] <= wb.dat_mosi;
+                        gpioc_func[15:0] <= wb.dat_mosi[15:0];
 
                     REGC_FUNC1:
-                        gpioc_func[31:16] <= wb.dat_mosi;
+                        gpioc_func[31:16] <= wb.dat_mosi[15:0];
 
                     REGC_FUNC2:
-                        gpioc_func[47:32] <= wb.dat_mosi;
+                        gpioc_func[47:32] <= wb.dat_mosi[15:0];
 
                     REGC_FUNC3:
-                        gpioc_func[63:48] <= wb.dat_mosi;
+                        gpioc_func[63:48] <= wb.dat_mosi[15:0];
 
                     default: ;
 

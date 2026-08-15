@@ -55,9 +55,11 @@ module dotara_wb_i2c #(
     // Address Decoding & Bus Error Logic
     //---------------------------------------------
     logic [7:0] addr_t;
-    logic [31:0] addr_rel = wb.adr - START_ADDRESS;
-    logic err = (wb.adr < START_ADDRESS) || (wb.adr >= (START_ADDRESS + SIZE));
+    logic [31:0] addr_rel;
+    logic err;
 
+    assign addr_rel = wb.adr - START_ADDRESS;
+    assign err = (wb.adr < START_ADDRESS) || (wb.adr >= (START_ADDRESS + SIZE));
     assign addr_t = addr_rel[7:0];
 
     //---------------------------------------------
@@ -96,15 +98,15 @@ module dotara_wb_i2c #(
         end else begin
             if (tx_push && !tx_full) begin
                 tx_fifo[tx_wptr[$clog2(FIFO_DEPTH)-1:0]] <= wb.dat_mosi[7:0];
-                tx_wptr <= tx_wptr + 1;
+                tx_wptr <= tx_wptr + 1'b1;
             end
             if (tx_pop && !tx_empty) begin
-                tx_rptr <= tx_rptr + 1;
+                tx_rptr <= tx_rptr + 1'b1;
             end
 
             case ({tx_push && !tx_full, tx_pop && !tx_empty})
-                2'b10: tx_cnt <= tx_cnt + 1;
-                2'b01: tx_cnt <= tx_cnt - 1;
+                2'b10: tx_cnt <= tx_cnt + 1'b1;
+                2'b01: tx_cnt <= tx_cnt - 1'b1;
                 default: ;
             endcase
         end
@@ -121,15 +123,15 @@ module dotara_wb_i2c #(
         end else begin
             if (rx_push && !rx_full) begin
                 rx_fifo[rx_wptr[$clog2(FIFO_DEPTH)-1:0]] <= rx_data_in;
-                rx_wptr <= rx_wptr + 1;
+                rx_wptr <= rx_wptr + 1'b1;
             end
             if (rx_pop && !rx_empty) begin
-                rx_rptr <= rx_rptr + 1;
+                rx_rptr <= rx_rptr + 1'b1;
             end
 
             case ({rx_push && !rx_full, rx_pop && !rx_empty})
-                2'b10: rx_cnt <= rx_cnt + 1;
-                2'b01: rx_cnt <= rx_cnt - 1;
+                2'b10: rx_cnt <= rx_cnt + 1'b1;
+                2'b01: rx_cnt <= rx_cnt - 1'b1;
                 default: ;
             endcase
         end
@@ -152,7 +154,7 @@ module dotara_wb_i2c #(
         end
     end
 
-    assign interrupt = (sr_if || tx_empty || rx_full) && ctr_ien;
+    assign intr = (sr_if || tx_empty || rx_full) && ctr_ien;
 
     // Clock Divider / Prescaler Engine
     logic [15:0] prescaler_cnt;
