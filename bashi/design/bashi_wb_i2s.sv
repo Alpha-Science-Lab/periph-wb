@@ -37,7 +37,7 @@ module bashi_wb_i2s #(
   assign addr_t = addr[7:0];
 
   assign wr_en = wb.cyc & wb.stb & wb.we & ~err;
-  assign wb.ack = wb.cyc & wb.stb & ~err;
+  assign wb.ack = wb.cyc & wb.stb & !wb.ack;
   assign wb.err = wb.cyc & wb.stb & err;
   assign wb.dat_miso = rdata;
 

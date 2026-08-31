@@ -85,7 +85,8 @@ module spondon_wb_pwm #(
       end
       else begin
         wb.ack <= wb.cyc && wb.stb && !wb.ack;
-        wb.err <= err;
+        wb.err <= wb.cyc && wb.stb && err 
+          && !wb.err;
       end
     end
 

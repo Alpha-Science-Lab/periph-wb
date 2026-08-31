@@ -150,7 +150,8 @@ module dotara_wb_i2c #(
             wb.err <= 1'b0;
         end else begin
             wb.ack <= wb.cyc && wb.stb && !wb.ack;
-            wb.err <= err;
+            wb.err <= wb.cyc && wb.stb && err 
+                && !wb.err;
         end
     end
 
