@@ -12,8 +12,8 @@
  */
 
 module shikol_wb_spinlock #(
-    parameter bit [31:0] START_ADDRESS = 32'h0012_0200,
-    parameter bit [31:0] SIZE          = 32'h0000_0020
+    parameter bit [31:0] ADDRESS = 32'h0012_0200,
+    parameter bit [31:0] SIZE    = 32'h0000_0020
 )(
     input  logic clk,
     input  logic rst,
@@ -41,9 +41,9 @@ module shikol_wb_spinlock #(
     logic [31:0] addr;
     logic err;
 
-    assign addr = wb.adr - START_ADDRESS;
-    assign err = wb.adr < START_ADDRESS
-      || wb.adr >= (START_ADDRESS + SIZE);
+    assign addr = wb.adr - ADDRESS;
+    assign err = wb.adr < ADDRESS
+      || wb.adr >= (ADDRESS + SIZE);
     assign addr_t = addr[7:0];
 
     //---------------------------------------------
