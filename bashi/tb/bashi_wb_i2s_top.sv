@@ -157,33 +157,34 @@ module bashi_wb_i2s_top;
     //----------------------------------------
 
 
-    logic [2*SAMPLE_WIDTH-1:0] frame_rx;
-    integer bit_count;
-
     localparam logic [SAMPLE_WIDTH-1:0] LEFT_EXPECTED  = 16'hA55A;
     localparam logic [SAMPLE_WIDTH-1:0] RIGHT_EXPECTED = 16'h3CC3;
 
-    initial begin
-        frame_rx  = '0;
-        bit_count = 0;
-    end
+    initial begin : frame_checker
+        int i;
+        logic [SAMPLE_WIDTH-1:0] left_rx;
+        logic [SAMPLE_WIDTH-1:0] right_rx;
 
-    always @(posedge i2s_bclk) begin
+        wait(!rst);
+        wait(dut.tx.busy);
 
-        frame_rx = {
-            frame_rx[2*SAMPLE_WIDTH-2:0],
-            i2s_sdout
-        };
+        // Skip startup partial frame; align to a full LRCLK frame boundary.
+        @(posedge i2s_lrclk);
+        @(negedge i2s_lrclk);
 
-        bit_count = bit_count + 1;
+        forever begin
+            left_rx  = '0;
+            right_rx = '0;
 
-        if(bit_count == (2*SAMPLE_WIDTH-1)) begin
+            for(i = 0; i < SAMPLE_WIDTH; i++) begin
+                @(posedge i2s_bclk);
+                left_rx = {left_rx[SAMPLE_WIDTH-2:0], i2s_sdout};
+            end
 
-            logic [SAMPLE_WIDTH-1:0] left_rx;
-            logic [SAMPLE_WIDTH-1:0] right_rx;
-
-            left_rx  = frame_rx[2*SAMPLE_WIDTH-1:SAMPLE_WIDTH];
-            right_rx = frame_rx[SAMPLE_WIDTH-1:0];
+            for(i = 0; i < SAMPLE_WIDTH; i++) begin
+                @(posedge i2s_bclk);
+                right_rx = {right_rx[SAMPLE_WIDTH-2:0], i2s_sdout};
+            end
 
             $display(
                 "[%0t] Frame Received: LEFT=%h RIGHT=%h",
@@ -207,11 +208,7 @@ module bashi_wb_i2s_top;
                     right_rx
                 );
             end
-
-            bit_count = 0;
-
         end
-
-    end        
+    end
 
 endmodule

@@ -10,9 +10,6 @@ VERILATOR := verilator
 
 RTL = \
 	../common/wishbone_interface.sv \
-	design/bashi_pkg.sv \
-	design/bashi_regs.sv \
-	design/bashi_i2s_tx.sv \
 	design/bashi_wb_i2s.sv \
 	tb/bashi_wb_i2s_top.sv
 
