@@ -76,22 +76,13 @@ module shikol_wb_spinlock #(
                     (addr_t < REG_LOCK_BASE + 8'd32)) begin
                     if (wb.we)
                         lock_reg[addr_t - REG_LOCK_BASE] <= wb.dat_mosi[0]; // Write 0 to release
-                    else
+                    else begin
+                        wb.dat_miso <= {31'd0, lock_reg[addr_t - REG_LOCK_BASE]}; // Returns 1 if acquired
                         lock_reg[addr_t - REG_LOCK_BASE] <= 1'b1;
+                    end
                 end
             end
         end
-    end
-
-    //---------------------------------------------
-    // Register Reads
-    //---------------------------------------------
-
-    always_comb begin
-
-        wb.dat_miso = 32'd0;
-        if ((addr_t >= REG_LOCK_BASE) && (addr_t < REG_LOCK_BASE + 8'd32))
-            wb.dat_miso = {31'd0, lock_reg[addr_t - REG_LOCK_BASE]}; // Return 1 if acquired
     end
 
 endmodule
