@@ -34,11 +34,11 @@ module dotara_wb_i2c #(
     // I2C Tri-State Pad Signals
     input  logic scl_pad_i,
     output logic scl_pad_o,
-    output logic scl_padoen_o, // 1 = High-Z (input), 0 = Drive Output
+    output logic scl_pad_oe, // 1 = High-Z (input), 0 = Drive Output
 
     input  logic sda_pad_i,
     output logic sda_pad_o,
-    output logic sda_padoen_o  // 1 = High-Z (input), 0 = Drive Output
+    output logic sda_pad_oe  // 1 = High-Z (input), 0 = Drive Output
 );
 
     //---------------------------------------------
@@ -289,10 +289,10 @@ module dotara_wb_i2c #(
     logic scl_out;
 
     assign scl_pad_o    = 1'b0;
-    assign scl_padoen_o = scl_out; // 1 = open-drain High-Z (HIGH), 0 = Drive LOW
+    assign scl_pad_oe = scl_out; // 1 = open-drain High-Z (HIGH), 0 = Drive LOW
 
     assign sda_pad_o    = 1'b0;
-    assign sda_padoen_o = sda_out; // 1 = open-drain High-Z (HIGH), 0 = Drive LOW
+    assign sda_pad_oe = sda_out; // 1 = open-drain High-Z (HIGH), 0 = Drive LOW
 
     always_ff @(posedge clk) begin
         if (rst || !ctr_en) begin

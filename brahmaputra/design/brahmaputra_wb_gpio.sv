@@ -90,29 +90,29 @@ module brahmaputra_wb_gpio #(
     output logic i2c_scl_i,
 
     //---------------------------------------------
-    // SPI0
+    // SPI channel 0
     //---------------------------------------------
 
-    input  logic spi0_mosi_o,
-    input  logic spi0_sck_o,
-    input  logic spi0_cs_o,
-    output logic spi0_miso_i,
+    input  logic spi0_mosi,
+    input  logic spi0_sck,
+    input  logic spi0_cs_n,
+    output logic spi0_miso,
 
     //---------------------------------------------
-    // SPI1
+    // SPI channel 1
     //---------------------------------------------
 
-    input  logic spi1_mosi_o,
-    input  logic spi1_sck_o,
-    input  logic spi1_cs_o,
-    output logic spi1_miso_i,
+    input  logic spi1_mosi,
+    input  logic spi1_sck,
+    input  logic spi1_cs_n,
+    output logic spi1_miso,
 
     //---------------------------------------------
     // I2S
     //---------------------------------------------
 
-    input  logic i2s_sck_o,
-    input  logic i2s_ws_o,
+    input  logic i2s_sck,
+    input  logic i2s_ws,
     input  logic i2s_sd_o,
     output logic i2s_sd_i,
 
@@ -475,7 +475,7 @@ module brahmaputra_wb_gpio #(
 
         i2c_sda_i   = 1'b0;
         i2c_scl_i   = 1'b0;
-        spi0_miso_i = 1'b0;
+        spi0_miso = 1'b0;
 
         for (int i = 0; i < 16; i++) begin
 
@@ -584,23 +584,23 @@ module brahmaputra_wb_gpio #(
                     case (i)
 
                         12: begin
-                            gpioa_o[i]  = spi0_mosi_o;
+                            gpioa_o[i]  = spi0_mosi;
                             gpioa_oe[i] = 1'b1;
                         end
 
                         13: begin
-                            gpioa_o[i]  = spi0_sck_o;
+                            gpioa_o[i]  = spi0_sck;
                             gpioa_oe[i] = 1'b1;
                         end
 
                         14: begin
-                            gpioa_o[i]  = spi0_cs_o;
+                            gpioa_o[i]  = spi0_cs_n;
                             gpioa_oe[i] = 1'b1;
                         end
 
                         15: begin
                             gpioa_oe[i] = 1'b0;
-                            spi0_miso_i  = gpioa_i[i];
+                            spi0_miso  = gpioa_i[i];
                         end
 
                         default: begin
@@ -630,7 +630,7 @@ module brahmaputra_wb_gpio #(
         gpiob_o  = gpiob_output;
         gpiob_oe = 16'd0;
 
-        spi1_miso_i = 1'b0;
+        spi1_miso = 1'b0;
 
         for (int i = 0; i < 16; i++) begin
 
@@ -669,23 +669,23 @@ module brahmaputra_wb_gpio #(
                     case (i)
 
                         0: begin
-                            gpiob_o[i]  = spi1_mosi_o;
+                            gpiob_o[i]  = spi1_mosi;
                             gpiob_oe[i] = 1'b1;
                         end
 
                         1: begin
-                            gpiob_o[i]  = spi1_sck_o;
+                            gpiob_o[i]  = spi1_sck;
                             gpiob_oe[i] = 1'b1;
                         end
 
                         2: begin
-                            gpiob_o[i]  = spi1_cs_o;
+                            gpiob_o[i]  = spi1_cs_n;
                             gpiob_oe[i] = 1'b1;
                         end
 
                         3: begin
                             gpiob_oe[i] = 1'b0;
-                            spi1_miso_i   = gpiob_i[i];
+                            spi1_miso   = gpiob_i[i];
                         end
 
                         default:
@@ -776,12 +776,12 @@ module brahmaputra_wb_gpio #(
                     case (i)
 
                         0: begin
-                            gpioc_o[i]  = i2s_sck_o;
+                            gpioc_o[i]  = i2s_sck;
                             gpioc_oe[i] = 1'b1;
                         end
 
                         1: begin
-                            gpioc_o[i]  = i2s_ws_o;
+                            gpioc_o[i]  = i2s_ws;
                             gpioc_oe[i] = 1'b1;
                         end
 

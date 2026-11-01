@@ -20,19 +20,19 @@ module dotara_wb_i2c_top;
     // I2C Tri-State Pad Signals
     logic scl_pad_i;
     logic scl_pad_o;
-    logic scl_padoen_o;
+    logic scl_pad_oe;
 
     logic sda_pad_i;
     logic sda_pad_o;
-    logic sda_padoen_o;
+    logic sda_pad_oe;
 
     // Simulated Pull-up I2C Bus Lines
     wire scl_bus;
     wire sda_bus;
 
     // Model Open-Drain Pull-up logic
-    assign scl_bus   = scl_padoen_o ? 1'b1 : scl_pad_o;
-    assign sda_bus   = sda_padoen_o ? 1'b1 : sda_pad_o;
+    assign scl_bus   = scl_pad_oe ? 1'b1 : scl_pad_o;
+    assign sda_bus   = sda_pad_oe ? 1'b1 : sda_pad_o;
 
     assign scl_pad_i = scl_bus;
     assign sda_pad_i = sda_bus;
@@ -55,10 +55,10 @@ module dotara_wb_i2c_top;
         .intr(interrupt),
         .scl_pad_i(scl_pad_i),
         .scl_pad_o(scl_pad_o),
-        .scl_padoen_o(scl_padoen_o),
+        .scl_pad_oe(scl_pad_oe),
         .sda_pad_i(sda_pad_i),
         .sda_pad_o(sda_pad_o),
-        .sda_padoen_o(sda_padoen_o)
+        .sda_pad_oe(sda_pad_oe)
     );
 
     // Wishbone Helper Tasks (Word Addressing)
