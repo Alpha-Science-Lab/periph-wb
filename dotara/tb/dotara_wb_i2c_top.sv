@@ -99,6 +99,27 @@ module dotara_wb_i2c_top;
         end
     endtask
 
+    // Issue one CR command and wait until it has finished (IF set).
+    // A command written while the previous one is still running is dropped.
+    task i2c_cmd(input logic [31:0] cmd);
+        logic [31:0] sr;
+        int tries;
+        begin
+            wb_write(32'h04, 32'h01); // IACK: clear IF
+            wb_write(32'h04, cmd);
+
+            tries = 0;
+            sr    = 32'd0;
+            while (!sr[0] && tries < 4000) begin
+                wb_read(32'h04, sr);
+                tries = tries + 1;
+            end
+
+            assert(sr[0])
+                else $error("command 0x%02X did not finish (IF never set)", cmd[7:0]);
+        end
+    endtask
+
     logic [31:0] read_val;
 
     initial begin
@@ -150,9 +171,8 @@ module dotara_wb_i2c_top;
 
         // 4. Generate START Condition (CR_SR = Word 4, CR = 0x80)
         $display("[TEST 4] Generating START Condition (CR = 0x80)");
-        wb_write(32'h04, 32'h80);
+        i2c_cmd(32'h80);
 
-        #2000;
         wb_read(32'h04, read_val);
         $display("[TEST 4] Status Register: 0x%02X (IF = %b, BUSY = %b)", 
             read_val[7:0], read_val[0], read_val[6]);
@@ -162,9 +182,8 @@ module dotara_wb_i2c_top;
         
         // 5. Transmit 1st Byte from TX FIFO (CR_SR = Word 4, CR = 0x10 [WR])
         $display("[TEST 5] Transmitting 1st Byte (0xA0) from TX FIFO");
-        wb_write(32'h04, 32'h10); // CR = WR
+        i2c_cmd(32'h10); // CR = WR
 
-        #8000;
         wb_read(32'h05, read_val);
         $display("[TEST 5] FIFO Status after 1st TX: TX_CNT = %d", read_val[7:4]);
 
@@ -173,9 +192,8 @@ module dotara_wb_i2c_top;
 
         // 6. Transmit 2nd Byte from TX FIFO (CR_SR = Word 4, CR = 0x10 [WR])
         $display("[TEST 6] Transmitting 2nd Byte (0xBE) from TX FIFO");
-        wb_write(32'h04, 32'h10); // CR = WR
+        i2c_cmd(32'h10); // CR = WR
 
-        #8000;
         wb_read(32'h05, read_val);
         $display("[TEST 6] FIFO Status after 2nd TX: TX_CNT = %d", read_val[7:4]);
 
@@ -184,9 +202,8 @@ module dotara_wb_i2c_top;
 
         // 7. Generate STOP Condition (CR_SR = Word 4, CR = 0x40)
         $display("[TEST 7] Generating STOP Condition (CR = 0x40)");
-        wb_write(32'h04, 32'h40);
+        i2c_cmd(32'h40);
 
-        #8000;
         wb_read(32'h04, read_val);
         $display("[TEST 7] Status Register after STOP: 0x%02X (BUSY = %b)",
             read_val[7:0], read_val[6]);
