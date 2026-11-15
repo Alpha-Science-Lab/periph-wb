@@ -471,7 +471,8 @@ module brahmaputra_wb_gpio #(
         gpioa_o  = gpioa_output;
         gpioa_oe = 16'd0;
 
-        uart_rx  = 1'b0;
+        // UART idles high; a low default would look like a permanent start bit
+        uart_rx  = 1'b1;
 
         i2c_sda_i   = 1'b0;
         i2c_scl_i   = 1'b0;

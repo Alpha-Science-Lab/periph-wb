@@ -189,10 +189,13 @@ module dotara_wb_i2c #(
         STATE_WRITE_B   = 5'b01011,
         STATE_WRITE_C   = 5'b01100,
         STATE_WRITE_D   = 5'b01101,
+        STATE_WRITE_E   = 5'b10010,
         STATE_READ_A    = 5'b01110,
         STATE_READ_B    = 5'b01111,
         STATE_READ_C    = 5'b10000,
-        STATE_READ_D    = 5'b10001
+        STATE_READ_D    = 5'b10001,
+        STATE_READ_E    = 5'b10011,
+        STATE_DONE      = 5'b10100
     } bit_state_t;
 
     bit_state_t state;
@@ -320,57 +323,67 @@ module dotara_wb_i2c #(
             end
 
             case (state)
+                // The lines keep their last value while idle: SCL stays low between the
+                // bytes of a transfer, both lines are high after a STOP.
                 STATE_IDLE: begin
-                    scl_out <= 1'b1;
-                    sda_out <= 1'b1;
-                    sr_tip  <= 1'b0;
+                    sr_tip <= 1'b0;
 
-                    if (cr_sta) begin
-                        state   <= STATE_START_A;
-                        sr_tip  <= 1'b1;
-                        sr_busy <= 1'b1;
-                    end else if (cr_wr) begin
-                        state     <= STATE_WRITE_A;
-                        shift_reg <= tx_data_out; // Pop from TX FIFO
-                        tx_pop    <= 1'b1;
-                        bit_cnt   <= 4'd7;
-                        sr_tip    <= 1'b1;
-                    end else if (cr_rd) begin
-                        state   <= STATE_READ_A;
-                        bit_cnt <= 4'd7;
-                        sr_tip  <= 1'b1;
-                    end else if (cr_sto) begin
-                        state  <= STATE_STOP_A;
-                        sr_tip <= 1'b1;
+                    // The command bits of the transfer that just finished are cleared one
+                    // cycle after done_pulse, so no command is taken in that cycle.
+                    if (!done_pulse) begin
+                        if (cr_sta) begin
+                            state   <= STATE_START_A;
+                            sr_tip  <= 1'b1;
+                            sr_busy <= 1'b1;
+                        end else if (cr_wr) begin
+                            state     <= STATE_WRITE_A;
+                            shift_reg <= tx_data_out; // Pop from TX FIFO
+                            tx_pop    <= 1'b1;
+                            bit_cnt   <= 4'd7;
+                            sr_tip    <= 1'b1;
+                        end else if (cr_rd) begin
+                            state   <= STATE_READ_A;
+                            bit_cnt <= 4'd7;
+                            sr_tip  <= 1'b1;
+                        end else if (cr_sto) begin
+                            state  <= STATE_STOP_A;
+                            sr_tip <= 1'b1;
+                        end
                     end
                 end
 
                 //-----------------------------------------
-                // START Condition Generation
+                // START Condition Generation (also repeated START)
                 //-----------------------------------------
                 STATE_START_A: begin
                     if (clk_en) begin
-                        sda_out <= 1'b1;
-                        scl_out <= 1'b1;
+                        sda_out <= 1'b1; // SDA HIGH while SCL is LOW
                         state   <= STATE_START_B;
                     end
                 end
 
                 STATE_START_B: begin
                     if (clk_en) begin
-                        sda_out <= 1'b0; // SDA goes LOW while SCL is HIGH
+                        scl_out <= 1'b1; // SCL HIGH
                         state   <= STATE_START_C;
                     end
                 end
 
                 STATE_START_C: begin
                     if (clk_en) begin
-                        scl_out <= 1'b0; // SCL LOW
+                        sda_out <= 1'b0; // SDA goes LOW while SCL is HIGH
                         state   <= STATE_START_D;
                     end
                 end
 
                 STATE_START_D: begin
+                    if (clk_en) begin
+                        scl_out <= 1'b0; // SCL LOW
+                        state   <= STATE_DONE;
+                    end
+                end
+
+                STATE_DONE: begin
                     done_pulse <= 1'b1;
                     sr_if      <= 1'b1;
                     state      <= STATE_IDLE;
@@ -409,9 +422,16 @@ module dotara_wb_i2c #(
 
                 STATE_WRITE_D: begin
                     if (clk_en) begin
-                        scl_out  <= 1'b1;
+                        scl_out <= 1'b1; // ACK clock HIGH
+                        state   <= STATE_WRITE_E;
+                    end
+                end
+
+                STATE_WRITE_E: begin
+                    if (clk_en) begin
                         sr_rxack <= sda_pad_i; // Sample ACK from slave
-                        state    <= STATE_START_D; // Completion
+                        scl_out  <= 1'b0;      // End of the ACK clock
+                        state    <= STATE_DONE;
                     end
                 end
 
@@ -428,14 +448,14 @@ module dotara_wb_i2c #(
 
                 STATE_READ_B: begin
                     if (clk_en) begin
-                        scl_out             <= 1'b1; // SCL HIGH
-                        shift_reg[bit_cnt] <= sda_pad_i; // Sample SDA line
-                        state               <= STATE_READ_C;
+                        scl_out <= 1'b1; // SCL HIGH
+                        state   <= STATE_READ_C;
                     end
                 end
 
                 STATE_READ_C: begin
                     if (clk_en) begin
+                        shift_reg[bit_cnt] <= sda_pad_i; // Sample SDA at the end of SCL HIGH
                         scl_out <= 1'b0; // SCL LOW
                         if (bit_cnt == 4'd0) begin
                             state   <= STATE_READ_D;
@@ -449,10 +469,17 @@ module dotara_wb_i2c #(
 
                 STATE_READ_D: begin
                     if (clk_en) begin
-                        scl_out    <= 1'b1;
+                        scl_out    <= 1'b1; // ACK clock HIGH
                         rx_data_in <= shift_reg; // Push into RX FIFO
                         rx_push    <= 1'b1;
-                        state      <= STATE_START_D; // Completion
+                        state      <= STATE_READ_E;
+                    end
+                end
+
+                STATE_READ_E: begin
+                    if (clk_en) begin
+                        scl_out <= 1'b0; // End of the ACK clock
+                        state   <= STATE_DONE;
                     end
                 end
 
@@ -483,9 +510,9 @@ module dotara_wb_i2c #(
                 end
 
                 STATE_STOP_D: begin
-                    done_pulse <= 1'b1;
-                    sr_if      <= 1'b1;
-                    state      <= STATE_IDLE;
+                    if (clk_en) begin // Bus free time before the next START
+                        state <= STATE_DONE;
+                    end
                 end
 
                 default: state <= STATE_IDLE;
